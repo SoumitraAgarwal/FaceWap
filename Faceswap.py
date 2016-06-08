@@ -161,28 +161,28 @@ while True:
     # Capture frame-by-frame
     ret, frame = video_capture.read()
     if ret:
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        faces1 = faceCascade1.detectMultiScale(gray, 1.1, 5)
-        # Draw a rectangle around the faces
-        im = list()
-        landmarks = list()
-        xc = list()
-        yc = list()
-        hc = list()
-        wc = list()
-        for (x, y, w, h) in faces1:
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
-            roi_gray = gray[y:y+h, x:x+w]
-            roi_color = frame[y:y+h, x:x+w]
-            im.append(read_im_and_landmarks(roi_color)[0])
-            landmarks.append(read_im_and_landmarks(roi_color)[1])
-            xc.append(x)
-            yc.append(y)
-        	hc.append(h)
-        	wc.append(w)
+		faces1 = faceCascade1.detectMultiScale(gray, 1.1, 5)
+		# Draw a rectangle around the faces
+		im = list()
+		landmarks = list()
+		xc = list()
+		yc = list()
+		hc = list()
+		wc = list()
+		for (x, y, w, h) in faces1:
+			cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+			roi_gray = gray[y:y+h, x:x+w]
+			roi_color = frame[y:y+h, x:x+w]
+			im.append(read_im_and_landmarks(roi_color)[0])
+			landmarks.append(read_im_and_landmarks(roi_color)[1])
+			xc.append(x)
+			yc.append(y)
+			hc.append(h)
+			wc.append(w)
 
-        M = transformation_from_points(landmarks1[ALIGN_POINTS],
+		M = transformation_from_points(landmarks1[ALIGN_POINTS],
 		                               landmarks2[ALIGN_POINTS])
 
 		mask = get_face_mask(im2, landmarks2)
@@ -195,9 +195,9 @@ while True:
 
 		output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
 		frame[yc[0]:yc[0]+hc[0], xc[0]:xc[0]+wc[0]]=output_ims
-        cv2.imshow('Video', frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+		cv2.imshow('Video', frame)
+		if cv2.waitKey(1) & 0xFF == ord('q'):
+			break
 # Release video capture
 video_capture.release()
 cv2.destroyAllWindows()

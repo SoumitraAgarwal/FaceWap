@@ -129,7 +129,7 @@ def warp_im(im, M, dshape):
                    flags=cv2.WARP_INVERSE_MAP)
     return output_im
 
-def correct_colours(im1, im2, landmarks1):
+def correct_colours(im1, im[1], landmarks1):
     blur_amount = COLOUR_CORRECT_BLUR_FRAC * numpy.linalg.norm(
                               numpy.mean(landmarks1[LEFT_EYE_POINTS], axis=0) -
                               numpy.mean(landmarks1[RIGHT_EYE_POINTS], axis=0))
@@ -137,13 +137,13 @@ def correct_colours(im1, im2, landmarks1):
     if blur_amount % 2 == 0:
         blur_amount += 1
     im1_blur = cv2.GaussianBlur(im1, (blur_amount, blur_amount), 0)
-    im2_blur = cv2.GaussianBlur(im2, (blur_amount, blur_amount), 0)
+    im[1]_blur = cv2.GaussianBlur(im[1], (blur_amount, blur_amount), 0)
 
     # Avoid divide-by-zero errors.
-    im2_blur += (128 * (im2_blur <= 1.0)).astype(im2_blur.dtype)
+    im[1]_blur += (128 * (im[1]_blur <= 1.0)).astype(im[1]_blur.dtype)
 
-    return (im2.astype(numpy.float64) * im1_blur.astype(numpy.float64) /
-                                                im2_blur.astype(numpy.float64))
+    return (im[1].astype(numpy.float64) * im1_blur.astype(numpy.float64) /
+                                                im[1]_blur.astype(numpy.float64))
 
 cam = cv2.VideoCapture(-1)
 cam.set(3,640)
@@ -176,18 +176,18 @@ while True:
 			hc.append(h)
 			wc.append(w)
 
-		M = transformation_from_points(landmarks1[ALIGN_POINTS],
-		                               landmarks2[ALIGN_POINTS])
+		M = transformation_from_points(landmarks[0][ALIGN_POINTS],
+		                               landmarks[1][ALIGN_POINTS])
 
-		mask = get_face_mask(im2, landmarks2)
-		warped_mask = warp_im(mask, M, im1.shape)
-		combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
+		mask = get_face_mask(im[1], landmarks[1])
+		warped_mask = warp_im(mask, M, im[0].shape)
+		combined_mask = numpy.max([get_face_mask(im[0], landmarks[0]), warped_mask],
 		                          axis=0)
 
-		warped_im2 = warp_im(im2, M, im1.shape)
-		warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
+		warped_im2 = warp_im(im[1], M, im[0].shape)
+		warped_corrected_im = correct_colours(im[0], warped_im2, landmarks[0])
 
-		output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
+		output_im = im[0] * (1.0 - combined_mask) + warped_corrected_im1 * combined_mask
 		frame[yc[0]:yc[0]+hc[0], xc[0]:xc[0]+wc[0]]=output_ims
 		cv2.imshow('Video', frame)
 		if cv2.waitKey(1) & 0xFF == ord('q'):

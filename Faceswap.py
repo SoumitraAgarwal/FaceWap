@@ -35,22 +35,6 @@ COLOUR_CORRECT_BLUR_FRAC = 0.6
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(PREDICTOR_PATH)
 
-class TooManyFaces(Exception):
-    pass
-
-class InsufficientFaces(Exception):
-    pass
-
-def get_landmarks(im):
-    rects = detector(im, 1)
-    
-    if len(rects) > 2:
-        raise TooManyFaces
-    if len(rects) < 2:
-        raise InsufficientFaces
-
-    return numpy.matrix([[p.x, p.y] for p in predictor(im, rects[0]).parts()])
-
 def annotate_landmarks(im, landmarks):
     im = im.copy()
     for idx, point in enumerate(landmarks):
@@ -117,14 +101,6 @@ def transformation_from_points(points1, points2):
                                        c2.T - (s2 / s1) * R * c1.T)),
                          numpy.matrix([0., 0., 1.])])
 
-def read_im_and_landmarks(fname):
-    im = cv2.imread(fname, cv2.IMREAD_COLOR)
-    im = cv2.resize(im, (im.shape[1] * SCALE_FACTOR,
-                         im.shape[0] * SCALE_FACTOR))
-    s = get_landmarks(im)
-
-    return im, s
-
 def warp_im(im, M, dshape):
     output_im = numpy.zeros(dshape, dtype=im.dtype)
     cv2.warpAffine(im,
@@ -151,20 +127,25 @@ def correct_colours(im1, im2, landmarks1):
     return (im2.astype(numpy.float64) * im1_blur.astype(numpy.float64) /
                                                 im2_blur.astype(numpy.float64))
 
-img1, landmarks1 = read_im_and_landmarks("img3.jpg")[0]
-img1, landmarks1 = read_im_and_landmarks("img3.jpg")[1]
+im1 = cv2.imread("img3.jpg", cv2.IMREAD_COLOR)
+rects = detector(im1, 1)
+if(len(rects)==2):
+	im2 = im1
+	landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
+	landmarks2 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[1]).parts()])
+	M = transformation_from_points(landmarks1[ALIGN_POINTS],
+	                               landmarks2[ALIGN_POINTS])
 
-M = transformation_from_points(landmarks1[ALIGN_POINTS],
-                               landmarks2[ALIGN_POINTS])
+	mask = get_face_mask(im2, landmarks2)
+	warped_mask = warp_im(mask, M, im1.shape)
+	combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
+	                          axis=0)
 
-mask = get_face_mask(im2, landmarks2)
-warped_mask = warp_im(mask, M, im1.shape)
-combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
-                          axis=0)
+	warped_im2 = warp_im(im2, M, im1.shape)
+	warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
 
-warped_im2 = warp_im(im2, M, im1.shape)
-warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
+	output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
 
-output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
-
-cv2.imwrite('output3.jpg', output_im)
+	cv2.imwrite('output3.jpg', output_im)
+else:
+	print("Insufficient faces")

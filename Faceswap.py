@@ -37,11 +37,11 @@ predictor = dlib.shape_predictor(PREDICTOR_PATH)
 
 def get_landmarks(im):
     rects = detector(im, 1)
-    print(len(rects))
+    
     if len(rects) > 2:
         print("Too Many Faces")
-    if len(rects) == 0:
-        print("No Faces")
+    if len(rects) < 2:
+        print("Insufficient Faces")
 
     return numpy.matrix([[p.x, p.y] for p in predictor(im, rects[0]).parts()])
 
@@ -111,7 +111,8 @@ def transformation_from_points(points1, points2):
                                        c2.T - (s2 / s1) * R * c1.T)),
                          numpy.matrix([0., 0., 1.])])
 
-def read_im_and_landmarks(im):
+def read_im_and_landmarks(fname):
+    im = cv2.imread(fname, cv2.IMREAD_COLOR)
     im = cv2.resize(im, (im.shape[1] * SCALE_FACTOR,
                          im.shape[0] * SCALE_FACTOR))
     s = get_landmarks(im)
@@ -144,53 +145,20 @@ def correct_colours(im1, im2, landmarks1):
     return (im2.astype(numpy.float64) * im1_blur.astype(numpy.float64) /
                                                 im2_blur.astype(numpy.float64))
 
-cam = cv2.VideoCapture(-1)
-cam.set(3,640)
-cam.set(4,480)
-video_capture = cam
+im1, landmarks1 = read_im_and_landmarks("img1.jpg")
+im2, landmarks2 = read_im_and_landmarks("img2.jpg")
 
-faceCascade1 = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-while True:
-    # Capture frame-by-frame
-    ret, frame = video_capture.read()
-    if ret:
-		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+M = transformation_from_points(landmarks1[ALIGN_POINTS],
+                               landmarks2[ALIGN_POINTS])
 
-		faces1 = faceCascade1.detectMultiScale(gray, 1.1, 5)
-		# Draw a rectangle around the faces
-		im = list()
-		landmarks = list()
-		xc = list()
-		yc = list()
-		hc = list()
-		wc = list()
-		for (x, y, w, h) in faces1:
-			cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
-			roi_gray = gray[y:y+h, x:x+w]
-			roi_color = frame[y:y+h, x:x+w]
-			im.append(read_im_and_landmarks(roi_color)[0])
-			landmarks.append(read_im_and_landmarks(roi_color)[1])
-			xc.append(x)
-			yc.append(y)
-			hc.append(h)
-			wc.append(w)
-		if(len(im)>1):
-			M = transformation_from_points(landmarks[0][ALIGN_POINTS],
-			                               landmarks[1][ALIGN_POINTS])
+mask = get_face_mask(im2, landmarks2)
+warped_mask = warp_im(mask, M, im1.shape)
+combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
+                          axis=0)
 
-			mask = get_face_mask(im[1], landmarks[1])
-			warped_mask = warp_im(mask, M, im[0].shape)
-			combined_mask = numpy.max([get_face_mask(im[0], landmarks[0]), warped_mask],
-			                          axis=0)
+warped_im2 = warp_im(im2, M, im1.shape)
+warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
 
-			warped_im2 = warp_im(im[1], M, im[0].shape)
-			warped_corrected_im = correct_colours(im[0], warped_im2, landmarks[0])
+output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
 
-			output_im = im[0] * (1.0 - combined_mask) + warped_corrected_im1 * combined_mask
-			frame[yc[0]:yc[0]+hc[0], xc[0]:xc[0]+wc[0]]=output_ims
-		cv2.imshow('Video', frame)
-		if cv2.waitKey(1) & 0xFF == ord('q'):
-			break
-# Release video capture
-video_capture.release()
-cv2.destroyAllWindows()
+cv2.imwrite('output.jpg', output_im)

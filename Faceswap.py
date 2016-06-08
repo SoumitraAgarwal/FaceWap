@@ -1,6 +1,6 @@
 import dlib
 
-PREDICTOR_PATH = "/home/matt/dlib-18.16/shape_predictor_68_face_landmarks.dat"
+PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(PREDICTOR_PATH)
@@ -99,6 +99,8 @@ def get_face_mask(im, landmarks):
 
     return im
 
+im1 = cv2.imread("img1.jpg")
+im2 = cv2.imread("img2.jgp")
 mask = get_face_mask(im2, landmarks2)
 warped_mask = warp_im(mask, M, im1.shape)
 combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],

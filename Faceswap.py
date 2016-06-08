@@ -35,13 +35,19 @@ COLOUR_CORRECT_BLUR_FRAC = 0.6
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(PREDICTOR_PATH)
 
+class TooManyFaces(Exception):
+    pass
+
+class InsufficientFaces(Exception):
+    pass
+
 def get_landmarks(im):
     rects = detector(im, 1)
     
     if len(rects) > 2:
-        print("Too Many Faces")
+        raise TooManyFaces
     if len(rects) < 2:
-        print("Insufficient Faces")
+        raise InsufficientFaces
 
     return numpy.matrix([[p.x, p.y] for p in predictor(im, rects[0]).parts()])
 
@@ -145,8 +151,8 @@ def correct_colours(im1, im2, landmarks1):
     return (im2.astype(numpy.float64) * im1_blur.astype(numpy.float64) /
                                                 im2_blur.astype(numpy.float64))
 
-im1, landmarks1 = read_im_and_landmarks("img1.jpg")
-im2, landmarks2 = read_im_and_landmarks("img2.jpg")
+img1, landmarks1 = read_im_and_landmarks("img3.jpg")[0]
+img1, landmarks1 = read_im_and_landmarks("img3.jpg")[1]
 
 M = transformation_from_points(landmarks1[ALIGN_POINTS],
                                landmarks2[ALIGN_POINTS])
@@ -161,4 +167,4 @@ warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
 
 output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
 
-cv2.imwrite('output.jpg', output_im)
+cv2.imwrite('output3.jpg', output_im)

@@ -151,8 +151,8 @@ def correct_colours(im1, im2, landmarks1):
     return (im2.astype(numpy.float64) * im1_blur.astype(numpy.float64) /
                                                 im2_blur.astype(numpy.float64))
 
-im1, landmarks1 = read_im_and_landmarks("img1.jpg")
-im2, landmarks2 = read_im_and_landmarks("img2.jpg")
+im1, landmarks1 = read_im_and_landmarks("img2.jpg")
+im2, landmarks2 = read_im_and_landmarks("img1.jpg")
 
 M = transformation_from_points(landmarks1[ALIGN_POINTS],
                                landmarks2[ALIGN_POINTS])
@@ -167,4 +167,4 @@ warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
 
 output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
 
-cv2.imwrite('output.jpg', output_im)
+cv2.imwrite('output1.jpg', output_im)

@@ -44,7 +44,7 @@ class NoFaces(Exception):
 def get_landmarks(im):
     rects = detector(im, 1)
     
-    if len(rects) > 1:
+    if len(rects) > 2:
         raise TooManyFaces
     if len(rects) == 0:
         raise NoFaces
@@ -151,20 +151,53 @@ def correct_colours(im1, im2, landmarks1):
     return (im2.astype(numpy.float64) * im1_blur.astype(numpy.float64) /
                                                 im2_blur.astype(numpy.float64))
 
-im1, landmarks1 = read_im_and_landmarks("img2.jpg")
-im2, landmarks2 = read_im_and_landmarks("img1.jpg")
+cam = cv2.VideoCapture(-1)
+cam.set(3,640)
+cam.set(4,480)
+video_capture = cam
 
-M = transformation_from_points(landmarks1[ALIGN_POINTS],
-                               landmarks2[ALIGN_POINTS])
+faceCascade2 = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+while True:
+    # Capture frame-by-frame
+    ret, frame = video_capture.read()
+    if ret:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-mask = get_face_mask(im2, landmarks2)
-warped_mask = warp_im(mask, M, im1.shape)
-combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
-                          axis=0)
+        faces1 = faceCascade1.detectMultiScale(gray, 1.1, 5)
+        # Draw a rectangle around the faces
+        im = list()
+        landmarks = list()
+        xc = list()
+        yc = list()
+        hc = list()
+        wc = list()
+        for (x, y, w, h) in faces1:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+            roi_gray = gray[y:y+h, x:x+w]
+            roi_color = frame[y:y+h, x:x+w]
+            im.append(read_im_and_landmarks(roi_color)[0])
+            landmarks.append(read_im_and_landmarks(roi_color)[1])
+            xc.append(x)
+            yc.append(y)
+        	hc.append(h)
+        	wc.append(w)
 
-warped_im2 = warp_im(im2, M, im1.shape)
-warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
+        M = transformation_from_points(landmarks1[ALIGN_POINTS],
+		                               landmarks2[ALIGN_POINTS])
 
-output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
+		mask = get_face_mask(im2, landmarks2)
+		warped_mask = warp_im(mask, M, im1.shape)
+		combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
+		                          axis=0)
 
-cv2.imwrite('output1.jpg', output_im)
+		warped_im2 = warp_im(im2, M, im1.shape)
+		warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
+
+		output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
+		frame[yc[0]:yc[0]+hc[0], xc[0]:xc[0]+wc[0]]=output_ims
+        cv2.imshow('Video', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+# Release video capture
+video_capture.release()
+cv2.destroyAllWindows()

@@ -150,7 +150,7 @@ cam.set(3,640)
 cam.set(4,480)
 video_capture = cam
 
-faceCascade2 = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+faceCascade1 = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 while True:
     # Capture frame-by-frame
     ret, frame = video_capture.read()

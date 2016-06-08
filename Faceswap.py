@@ -35,19 +35,13 @@ COLOUR_CORRECT_BLUR_FRAC = 0.6
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(PREDICTOR_PATH)
 
-class TooManyFaces(Exception):
-    pass
-
-class NoFaces(Exception):
-    pass
-
 def get_landmarks(im):
     rects = detector(im, 1)
     print(len(rects))
     if len(rects) > 2:
-        raise TooManyFaces
+        print("Too Many Faces")
     if len(rects) == 0:
-        raise NoFaces
+        print("No Faces")
 
     return numpy.matrix([[p.x, p.y] for p in predictor(im, rects[0]).parts()])
 

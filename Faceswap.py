@@ -35,17 +35,6 @@ COLOUR_CORRECT_BLUR_FRAC = 0.6
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(PREDICTOR_PATH)
 
-def annotate_landmarks(im, landmarks):
-    im = im.copy()
-    for idx, point in enumerate(landmarks):
-        pos = (point[0, 0], point[0, 1])
-        cv2.putText(im, str(idx), pos,
-                    fontFace=cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,
-                    fontScale=0.4,
-                    color=(0, 0, 255))
-        cv2.circle(im, pos, 3, color=(0, 255, 255))
-    return im
-
 def draw_convex_hull(im, points, color):
     points = cv2.convexHull(points)
     cv2.fillConvexPoly(im, points, color=color)
@@ -136,6 +125,9 @@ while True:
     ret, im1 = video_capture.read()
     if ret:
 		rects = detector(im1, 1)
+		print(len(rects))
+		for i in range(len(rects)):
+			cv2.rectangle(im1, (rects[i].left(),rects[i].top()),(rects[i].right(),rects[i].bottom()), (0,0,255),2)
 		if(len(rects)==2):
 			im2 = im1
 			landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
@@ -162,7 +154,7 @@ while True:
 			print("Insufficient faces")	
 
 		cv2.imshow('Video', im1)
-	    if cv2.waitKey(1) & 0xFF == ord('q'):
+		if cv2.waitKey(1) & 0xFF == ord('q'):
 	            break
 # Release video capture
 video_capture.release()

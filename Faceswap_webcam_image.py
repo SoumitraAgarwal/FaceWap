@@ -154,7 +154,7 @@ while True:
 
 		cv2.imshow('Video', im1)
 		if cv2.waitKey(1) & 0xFF == ord('q'):
-	            break
+            break
 # Release video capture
 video_capture.release()
 cv2.destroyAllWindows()

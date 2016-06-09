@@ -115,49 +115,31 @@ def correct_colours(im1, im2, landmarks1):
 
     return (im2.astype(numpy.float64) * im1_blur.astype(numpy.float64) /
                                                 im2_blur.astype(numpy.float64))
-cam = cv2.VideoCapture(-1)
-cam.set(3,640)
-cam.set(4,480)
-video_capture = cam
-
-while True:
-    # Capture frame-by-frame
-    ret, im1 = video_capture.read()
-    if ret:
-		rects = detector(im1, 1)
-		print(len(rects))
-		for i in range(len(rects)):
-			cv2.rectangle(im1, (rects[i].left(),rects[i].top()),(rects[i].right(),rects[i].bottom()), (0,0,255),2)
-		if(len(rects)==2):
-			im2 = im1
-			landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
-			landmarks2 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[1]).parts()])
-			M = transformation_from_points(landmarks1[ALIGN_POINTS],
-			                               landmarks2[ALIGN_POINTS])
-			M1 = transformation_from_points(landmarks2[ALIGN_POINTS],
-			                               landmarks1[ALIGN_POINTS])
-			mask = get_face_mask(im1, landmarks1)
-			mask1 = get_face_mask(im2, landmarks2)
-			warped_mask = warp_im(mask, M, im1.shape)
-			warped_mask1 = warp_im(mask1, M1, im2.shape)
-			combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
-			                          axis=0)
-			combined_mask1 = numpy.max([get_face_mask(im2, landmarks2), warped_mask1],
-			                          axis=0)
-			warped_im2 = warp_im(im2, M, im1.shape)
-			warped_im1 = warp_im(im1, M1, im2.shape)
-			warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
-			warped_corrected_im1 = correct_colours(im2, warped_im1, landmarks2)
-			output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
-			im1 = output_im * (1.0 - combined_mask1) + warped_corrected_im1 * combined_mask1
-		else:
-			print("Insufficient faces")	
-
-		cv2.imshow('Video', im1)
-		if cv2.waitKey(1) & 0xFF == ord('q'):
-	            break
-# Release video capture
-video_capture.release()
-cv2.destroyAllWindows()
-
-		
+im1 = cv2.imread("img3.jpg")
+rects = detector(im1, 1)
+print(len(rects))
+if(len(rects)==2):
+	im2 = im1
+	landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
+	landmarks2 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[1]).parts()])
+	M = transformation_from_points(landmarks1[ALIGN_POINTS],
+	                               landmarks2[ALIGN_POINTS])
+	M1 = transformation_from_points(landmarks2[ALIGN_POINTS],
+	                               landmarks1[ALIGN_POINTS])
+	mask = get_face_mask(im1, landmarks1)
+	mask1 = get_face_mask(im2, landmarks2)
+	warped_mask = warp_im(mask, M, im1.shape)
+	warped_mask1 = warp_im(mask1, M1, im2.shape)
+	combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
+	                          axis=0)
+	combined_mask1 = numpy.max([get_face_mask(im2, landmarks2), warped_mask1],
+	                          axis=0)
+	warped_im2 = warp_im(im2, M, im1.shape)
+	warped_im1 = warp_im(im1, M1, im2.shape)
+	warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
+	warped_corrected_im1 = correct_colours(im2, warped_im1, landmarks2)
+	output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
+	im1 = output_im * (1.0 - combined_mask1) + warped_corrected_im1 * combined_mask1
+	cv2.imwrite('output3.jpg', im1)
+else :
+	print("Greater/Lesser than 2 faces, no output generated")

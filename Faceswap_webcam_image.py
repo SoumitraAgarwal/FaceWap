@@ -149,11 +149,11 @@ while True:
             warped_corrected_im1 = correct_colours(im2, warped_im1, landmarks2)
             output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
             im1 = output_im * (1.0 - combined_mask1) + warped_corrected_im1 * combined_mask1
-		else:
-			print("Insufficient faces")	
+        else:
+            print("Insufficient faces")	
 
-		cv2.imshow('Video', im1)
-		if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.imshow('Video', im1)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 # Release video capture
 video_capture.release()

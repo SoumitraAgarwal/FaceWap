@@ -129,7 +129,7 @@ while True:
     if ret:
 		rects = detector(im1, 1)
 		cv2.rectangle(im1, (rects[0].left(),rects[0].top()),(rects[0].right(),rects[0].bottom()), (0,0,255),2)
-		if(len(rects)==2):
+        if(len(rects)==2):
             landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
             M = transformation_from_points(landmarks1[ALIGN_POINTS],
                                                landmarks2[ALIGN_POINTS])

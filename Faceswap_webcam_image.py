@@ -129,8 +129,8 @@ while True:
     ret, im1 = video_capture.read()
     if ret:
         rects = detector(im1, 1)
-        landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
         if(len(rects)==1):
+            landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
             M = transformation_from_points(landmarks1[ALIGN_POINTS],
                                landmarks2[ALIGN_POINTS])
 

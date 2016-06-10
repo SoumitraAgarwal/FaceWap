@@ -117,11 +117,10 @@ def correct_colours(im1, im2, landmarks1):
                                                 im2_blur.astype(numpy.float64))
 
 cam = cv2.VideoCapture(-1)
-cam.set(3,640)
-cam.set(4,480)
+cam.set(3,3000*818/(1841))
+cam.set(4,3000*1023/(1841))
 video_capture = cam
 im2 = cv2.imread("img1.jpg")
-im2 = cv2.resize(im2,(640,480), interpolation = cv2.INTER_CUBIC)
 rects = detector(im2,1)
 landmarks2 = numpy.matrix([[p.x, p.y] for p in predictor(im2, rects[0]).parts()])
 while True:
@@ -145,10 +144,10 @@ while True:
             break
         else:
             print("Insufficient faces")	
-
-        cv2.imwrite('output4.jpg', im2)
+        cv2.imshow('Video', im1)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+cv2.imwrite('output4.jpg', output_im)
 # Release video capture
 video_capture.release()
 cv2.destroyAllWindows()

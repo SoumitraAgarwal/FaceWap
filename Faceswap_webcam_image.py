@@ -147,7 +147,7 @@ while True:
         else:
             print("Insufficient faces")	
 
-        cv2.imshow('Video', im1)
+        cv2.imshow('Video', im2)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 # Release video capture

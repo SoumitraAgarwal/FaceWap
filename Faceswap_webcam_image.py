@@ -128,6 +128,7 @@ while True:
     # Capture frame-by-frame
     ret, im1 = video_capture.read()
     if ret:
+        output_im = im1
         rects = detector(im1, 1)
         if(len(rects)==1):
             landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
@@ -142,7 +143,7 @@ while True:
             warped_im2 = warp_im(im2, M, im1.shape)
             warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
 
-            im1 = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
+            output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
         else:
             print("Insufficient faces")	
 

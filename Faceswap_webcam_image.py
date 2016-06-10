@@ -142,7 +142,7 @@ while True:
             warped_im2 = warp_im(im2, M, im1.shape)
             warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
 
-            output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
+            im1 = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
         else:
             print("Insufficient faces")	
 

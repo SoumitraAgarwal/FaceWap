@@ -132,22 +132,21 @@ while True:
         rects = detector(im1, 1)
         if(len(rects)==1):
             landmarks1 = numpy.matrix([[p.x, p.y] for p in predictor(im1, rects[0]).parts()])
-            M = transformation_from_points(landmarks1[ALIGN_POINTS],
-                               landmarks2[ALIGN_POINTS])
+            M = transformation_from_points(landmarks1[ALIGN_POINTS],landmarks2[ALIGN_POINTS])
 
             mask = get_face_mask(im2, landmarks2)
             warped_mask = warp_im(mask, M, im1.shape)
-            combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],
-                                      axis=0)
+            combined_mask = numpy.max([get_face_mask(im1, landmarks1), warped_mask],axis=0)
 
             warped_im2 = warp_im(im2, M, im1.shape)
             warped_corrected_im2 = correct_colours(im1, warped_im2, landmarks1)
 
             output_im = im1 * (1.0 - combined_mask) + warped_corrected_im2 * combined_mask
+            break
         else:
             print("Insufficient faces")	
 
-        cv2.imshow('Video', im2)
+        cv2.imwrite('output4.jpg', im2)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 # Release video capture
